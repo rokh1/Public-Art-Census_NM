@@ -132,63 +132,73 @@ L.control.scale().addTo(map);
         "zipcodes__MODES.geojson"
     ];
 
-    fileList.forEach(filename => {
-        const url = repoBase + encodeURIComponent(filename);
-        const layerName = filename.replace(".geojson", "").replace(/_/g, " ");
-        const color = getRandomColor();
+fileList.forEach(filename => {
+    const url = repoBase + encodeURIComponent(filename);
+    const layerName = filename.replace(".geojson", "").replace(/_/g, " ");
+    const color = getRandomColor();
 
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                const isPoint = data.features?.[0]?.geometry?.type === "Point";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = layerName;
+    checkbox.checked = false; // initially off
 
-                const layer = L.geoJSON(data, {
-                    style: isPoint ? null : {
-                        color: color,
-                        weight: 2,
-                        fillOpacity: 0.3
-                    },
-                    pointToLayer: (feature, latlng) => {
-                        return L.circleMarker(latlng, {
-                            radius: 5,
-                            fillColor: color,
-                            color: "#000",
-                            weight: 1,
-                            opacity: 1,
-                            fillOpacity: 0.8
-                        });
-                    },
-                    onEachFeature: (feature, layerEl) => {
-                        const props = feature.properties || {};
-                        const popup = Object.entries(props)
-                            .map(([k, v]) => `<b>${k}</b>: ${v}`)
-                            .join("<br>");
-                        layerEl.bindPopup(`<b>${layerName}</b><hr>${popup}`);
-                    }
-                });
+    let layerLoaded = false; // track loading status
 
-                overlayLayers[layerName] = layer;
+    checkbox.onchange = () => {
+        if (checkbox.checked) {
+            if (!layerLoaded) {
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const layer = L.geoJSON(data, {
+                            style: {
+                                color: color,
+                                fillOpacity: 0.3,
+                                weight: 1
+                            },
+                            pointToLayer: (feature, latlng) => {
+                                return L.circleMarker(latlng, {
+                                    radius: 5,
+                                    fillColor: color,
+                                    color: "#000",
+                                    weight: 1,
+                                    opacity: 1,
+                                    fillOpacity: 0.8
+                                });
+                            },
+                            onEachFeature: (feature, layerEl) => {
+                                const props = feature.properties || {};
+                                const popupContent = Object.entries(props)
+                                    .map(([k, v]) => `<b>${k}:</b> ${v}`)
+                                    .join('<br>');
+                                layerEl.bindPopup(`<b>${layerName}</b><hr>${popupContent}`);
+                            }
+                        );
+                        overlayLayers[layerName] = layer;
+                        layer.addTo(map);
+                        layerLoaded = true;
+                    })
+                    .catch(err => console.error("Error loading", filename, err));
+            } else {
+                map.addLayer(overlayLayers[layerName]);
+            }
+        } else {
+            if (overlayLayers[layerName]) {
+                map.removeLayer(overlayLayers[layerName]);
+            }
+        }
+    };
 
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.id = layerName;
-                checkbox.checked = false; // Start off
-                checkbox.onchange = () => {
-                    if (checkbox.checked) {
-                        map.addLayer(layer);
-                    } else {
-                        map.removeLayer(layer);
-                    }
-                };
+    const label = document.createElement("label");
+    label.htmlFor = checkbox.id;
+    labelText = document.createTextNode(layerName);
+    label = document.createElement("label");
+    label.appendChild(checkbox);
+    label = document.createTextNode(layerName);
+    menu.appendChild(checkbox);
+    menu.appendChild(label);
+});
 
-                const label = document.createElement("label");
-                label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(" " + layerName));
-
-                menu.appendChild(label);
-            })
-            .catch(err => console.error("Error loading", filename, err));
-    });
     </script>
 </body>
 </html>
