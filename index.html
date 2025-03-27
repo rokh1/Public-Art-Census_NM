@@ -41,7 +41,6 @@
     }).addTo(map);
 
     const overlayLayers = {};
-    const layerControls = {};
     const menu = document.getElementById("layerMenu");
     const repoBase = "https://mckeont.github.io/geojsons_bern_interactive/";
 
@@ -53,7 +52,6 @@
         }
         return color;
     }
-
     const fileList = [
         "ABQ_Artwork.geojson",
         "ABQ_points.geojson",
@@ -172,6 +170,7 @@
                 const checkbox = document.createElement("input");
                 checkbox.type = "checkbox";
                 checkbox.id = layerName;
+                checkbox.checked = false; // Start off
                 checkbox.onchange = () => {
                     if (checkbox.checked) {
                         map.addLayer(layer);
