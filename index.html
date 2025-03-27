@@ -27,14 +27,54 @@
             display: block;
             margin-bottom: 5px;
         }
+        .toggle-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1100;
+    background: #fff;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.menu {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px;
+    max-height: 85vh;
+    overflow-y: auto;
+    z-index: 1000;
+    border-radius: 5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    width: 240px;
+}
+
+.menu label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <div class="menu" id="layerMenu"></div>
+<button id="toggleMenu" class="toggle-button">☰ Layers</button>
+<div class="menu" id="layerMenu" style="display: none;"></div>
 
     <script>
     const map = L.map('map').setView([35.0844, -106.6504], 11);
+document.getElementById('toggleMenu').onclick = function () {
+    const menu = document.getElementById('layerMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+};
+
 L.control.scale().addTo(map);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
