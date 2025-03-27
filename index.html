@@ -174,11 +174,20 @@ L.control.scale().addTo(map);
 fileList.forEach(filename => {
     const url = repoBase + encodeURIComponent(filename);
     const layerName = filename.replace(".geojson", "").replace(/_/g, " ");
+const defaultLayers = [
+    "canvassed artwork all",             // This matches "canvassed_artwork_all.geojson"
+    "CanvassedArtwork MultipleRingBuffer1"  // This matches "CanvassedArtwork_MultipleRingBuffer1.geojson"
+];
+
+const shouldLoadByDefault = defaultLayers.includes(layerName);
+
     const color = getRandomColor();
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.id = layerName;
+checkbox.checked = shouldLoadByDefault;
+
 
     let layerLoaded = false;
 
@@ -236,6 +245,8 @@ fileList.forEach(filename => {
     label.appendChild(document.createTextNode(" " + layerName));
 
     menu.appendChild(label);
+if (shouldLoadByDefault) checkbox.onchange();
+
 });
 
     </script>
