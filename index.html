@@ -140,9 +140,8 @@ fileList.forEach(filename => {
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.id = layerName;
-    checkbox.checked = false; // initially off
 
-    let layerLoaded = false; // track loading status
+    let layerLoaded = false;
 
     checkbox.onchange = () => {
         if (checkbox.checked) {
@@ -150,8 +149,10 @@ fileList.forEach(filename => {
                 fetch(url)
                     .then(response => response.json())
                     .then(data => {
+                        const isPoint = data.features?.[0]?.geometry?.type === "Point";
+
                         const layer = L.geoJSON(data, {
-                            style: {
+                            style: isPoint ? null : {
                                 color: color,
                                 fillOpacity: 0.3,
                                 weight: 1
@@ -173,7 +174,8 @@ fileList.forEach(filename => {
                                     .join('<br>');
                                 layerEl.bindPopup(`<b>${layerName}</b><hr>${popupContent}`);
                             }
-                        );
+                        });
+
                         overlayLayers[layerName] = layer;
                         layer.addTo(map);
                         layerLoaded = true;
@@ -190,12 +192,10 @@ fileList.forEach(filename => {
     };
 
     const label = document.createElement("label");
-    label.htmlFor = checkbox.id;
-    labelText = document.createTextNode(layerName);
-    label = document.createElement("label");
+    label.htmlFor = layerName;  // Associate label with checkbox for accessibility
     label.appendChild(checkbox);
-    label = document.createTextNode(layerName);
-    menu.appendChild(checkbox);
+    label.appendChild(document.createTextNode(" " + layerName));
+
     menu.appendChild(label);
 });
 
