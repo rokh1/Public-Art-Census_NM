@@ -1,21 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dynamic GIS Layers from Excel</title>
+    <title>Dynamic GIS Layers</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
         #map { width: 100%; height: 100vh; }
         .leaflet-popup-content { font-size: 14px; line-height: 1.4; }
+        .menu {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        .menu label {
+            display: block;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div class="menu" id="layerMenu"></div>
 
     <script>
     const map = L.map('map').setView([35.0844, -106.6504], 11);
@@ -25,6 +41,8 @@
     }).addTo(map);
 
     const overlayLayers = {};
+    const layerControls = {};
+    const menu = document.getElementById("layerMenu");
     const repoBase = "https://mckeont.github.io/geojsons_bern_interactive/";
 
     function getRandomColor() {
@@ -149,9 +167,24 @@
                     }
                 });
 
-                layer.addTo(map);
                 overlayLayers[layerName] = layer;
-                L.control.layers(null, overlayLayers, { collapsed: true }).addTo(map);
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.id = layerName;
+                checkbox.onchange = () => {
+                    if (checkbox.checked) {
+                        map.addLayer(layer);
+                    } else {
+                        map.removeLayer(layer);
+                    }
+                };
+
+                const label = document.createElement("label");
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(" " + layerName));
+
+                menu.appendChild(label);
             })
             .catch(err => console.error("Error loading", filename, err));
     });
