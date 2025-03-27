@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dynamic GIS Layers from Excel</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        #map { width: 100%; height: 100vh; }
+        .leaflet-popup-content { font-size: 14px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+    const map = L.map('map').setView([35.0844, -106.6504], 11);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const overlayLayers = {};
+    const repoBase = "https://mckeont.github.io/geojsons_bern_interactive/";
+
+    function getRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+
+    const fileList = [
+        "ABQ Artwork.geojson",
+        "ABQ_points.geojson",
+        "AllSpecialZones.geojson",
+        "AllSpecialZones_Chililigrant.geojson",
+        "AllSpecialZones_Isleta.geojson",
+        "AllSpecialZones_Tohajiilee.geojson",
+        "AllSpecialZones_Tohajiilee_tribal.geojson",
+        "AllSpecialZones_iselta_library.geojson",
+        "AllSpecialZones_iseltapolice.geojson",
+        "ArtworkwithArtistSignatureonly.geojson",
+        "Book1_countyartjan6_ExportTable_XYTableToPoint.geojson",
+        "CanvassedArtwork_1mile_hospitals.geojson",
+        "CanvassedArtwork_480within1mileforest.geojson",
+        "CanvassedArtwork_ExcludingCityParks_1mileOpenSpace.geojson",
+        "CanvassedArtwork_ExportFeatures1milepolice.geojson",
+        "CanvassedArtwork_K12_anduni.geojson",
+        "CanvassedArtwork_MultipleRingBuffer1.geojson",
+        "CanvassedArtwork_OPENSPACE.geojson",
+        "CanvassedArtwork_swanson_BernCoParksOpenSpace.geojson",
+        "CanvassedArtwork_swanson_partnermanagedspace.geojson",
+        "Census_Bern_Summarizefunds.geojson",
+        "Census_Bern_demographics.geojson",
+        "Census_publicArtDeserts.geojson",
+        "Censustracts_80AMI_andbelow_ExportFeatures.geojson",
+        "Censustracts_80AMI_andbelow_lowtonoartwork.geojson",
+        "CitiesCommunities_ExportFeatures.geojson",
+        "CityParks_PairwiseClip.geojson",
+        "City_only.geojson",
+        "City_only_points.geojson",
+        "CountyCity_ArtistSigsonly.geojson",
+        "CountyCity_Identifier.geojson",
+        "CountyCity_Identifier_Citystats.geojson",
+        "CountyCity_Identifier_Citystats_countystats_All.geojson",
+        "CountyCity_Ready_Sept2024.geojson",
+        "CountyCity_Ready_Sept2024_8_zip.geojson",
+        "CountyCity_ethnicity_sub.geojson",
+        "CountyPublicFund_ALLMEDIANzip_district.geojson",
+        "County_only.geojson",
+        "Countycity_publicFunds_Merge.geojson",
+        "Countycity_publicFunds_median.geojson",
+        "EJSCREEN_StateP_PairwiseClip.geojson",
+        "EPA_Air_Monitors.geojson",
+        "FINALV1.geojson",
+        "FINALV2.geojson",
+        "Isleta_Artwork_specialpoints.geojson",
+        "KnownCity.geojson",
+        "KnownCounty.geojson",
+        "KnownInventory.geojson",
+        "Modes_Artistwithsigs.geojson",
+        "NM_CensusTracts2020__Project.geojson",
+        "NM_CensusTracts2020__Project_ExportFeatures.geojson",
+        "NationalWalkabilityIndex_NewMexico.geojson",
+        "New_Mexico_walk_Bern.geojson",
+        "New_Mexico_walk_PairwiseClip.geojson",
+        "New_Mexico_walk__SpatialJoin.geojson",
+        "NineLandGrant_Merge.geojson",
+        "OpenSpace_PairwiseClip.geojson",
+        "PublicArtWorks_ExportFeatures.geojson",
+        "RoadInventory_Erase.geojson",
+        "RoadInventory_Erase1.geojson",
+        "SIGSONLYPERCENTAGESTABLE.geojson",
+        "SPECIALZONES_Original_ExportTable_XYTableToPoint.geojson",
+        "Tohajiilee_artwork_specialpoints.geojson",
+        "TrainStops_ExportFeatures.geojson",
+        "Walkability_Bern_ARTJOIN.geojson",
+        "WalkabilityandArtDensity_ClustersOutliers.geojson",
+        "WalkabilityandArtDensity_ExportFeatures.geojson",
+        "WalkabilityandArtDensity_highwalkart.geojson",
+        "c2020CensusTract_SpatialJoin.geojson",
+        "c2020CensusTract_SpatialJoinfunds.geojson",
+        "canonpoints_only.geojson",
+        "canvassed_artwork_all.geojson",
+        "cb_2020_35_joined.geojson",
+        "cb_2020_35_joined_ExportFeatures.geojson",
+        "zipcodes__MODES.geojson"
+    ];
+
+    fileList.forEach(filename => {
+        const url = repoBase + encodeURIComponent(filename);
+        const layerName = filename.replace(".geojson", "").replace(/_/g, " ");
+        const color = getRandomColor();
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                const isPoint = data.features?.[0]?.geometry?.type === "Point";
+
+                const layer = L.geoJSON(data, {
+                    style: isPoint ? null : {
+                        color: color,
+                        weight: 2,
+                        fillOpacity: 0.3
+                    },
+                    pointToLayer: (feature, latlng) => {
+                        return L.circleMarker(latlng, {
+                            radius: 5,
+                            fillColor: color,
+                            color: "#000",
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    onEachFeature: (feature, layerEl) => {
+                        const props = feature.properties || {};
+                        const popup = Object.entries(props)
+                            .map(([k, v]) => `<b>${k}</b>: ${v}`)
+                            .join("<br>");
+                        layerEl.bindPopup(`<b>${layerName}</b><hr>${popup}`);
+                    }
+                });
+
+                layer.addTo(map);
+                overlayLayers[layerName] = layer;
+                L.control.layers(null, overlayLayers, { collapsed: true }).addTo(map);
+            })
+            .catch(err => console.error("Error loading", filename, err));
+    });
+    </script>
+</body>
+</html>
