@@ -35,6 +35,7 @@
 
     <script>
     const map = L.map('map').setView([35.0844, -106.6504], 11);
+L.control.scale().addTo(map);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
@@ -52,6 +53,8 @@
         }
         return color;
     }
+
+
     const fileList = [
         "ABQ_Artwork.geojson",
         "ABQ_points.geojson",
