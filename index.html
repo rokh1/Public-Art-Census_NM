@@ -7,39 +7,25 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
     <style>
         #map { width: 100%; height: 100vh; }
         .leaflet-popup-content { font-size: 14px; line-height: 1.4; }
-        .menu {
+        .toggle-button {
             position: absolute;
             top: 10px;
             left: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            max-height: 90vh;
-            overflow-y: auto;
-            z-index: 1000;
-            border-radius: 5px;
+            z-index: 1100;
+            background: #fff;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 4px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            font-size: 16px;
         }
-        .menu label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .toggle-button {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 1100;
-    background: #fff;
-    border: none;
-    padding: 10px 14px;
-    border-radius: 4px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-    font-size: 16px;
-}
 
 .menu {
     position: absolute;
@@ -52,30 +38,74 @@
     z-index: 1000;
     border-radius: 5px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    width: 240px;
+    width: 480px; /* wider */
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* two columns */
+    gap: 8px;
 }
 
+
 .menu label {
-    display: block;
-    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
     font-size: 14px;
+    white-space: nowrap;
 }
+
+@media (max-width: 600px) {
+    .menu {
+        grid-template-columns: 1fr;
+        width: 90vw;
+    }
+}
+
+        #legend {
+            position: absolute;
+            bottom: 30px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            font-size: 12px;
+            border-radius: 5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+			max-height: 40vh; /* instead of fixed 200px */
+        }
+		
 
     </style>
 </head>
 <body>
     <div id="map"></div>
-<button id="toggleMenu" class="toggle-button">☰ Layers</button>
-<div class="menu" id="layerMenu" style="display: none;"></div>
+    <button id="toggleMenu" class="toggle-button">☰ Layers</button>
+    <div class="menu" id="layerMenu" style="display: none;"></div>
+    <div id="legend"></div>
 
     <script>
     const map = L.map('map').setView([35.0844, -106.6504], 11);
+    const legend = document.getElementById("legend");
+
 document.getElementById('toggleMenu').onclick = function () {
     const menu = document.getElementById('layerMenu');
     menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    if (menu.style.display === 'block') menu.scrollTop = 0;
 };
 
-L.control.scale().addTo(map);
+    L.control.scale().addTo(map);
+
+    L.Control.geocoder({
+        defaultMarkGeocode: false
+    })
+    .on('markgeocode', function(e) {
+        map.setView(e.geocode.center, 14);
+        L.marker(e.geocode.center).addTo(map)
+            .bindPopup(e.geocode.name)
+            .openPopup();
+    })
+    .addTo(map);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
@@ -170,85 +200,100 @@ L.control.scale().addTo(map);
         "cb_2020_35_joined_ExportFeatures.geojson",
         "zipcodes__MODES.geojson"
     ];
+	
+	
+fileList.sort().forEach(filename => {
+        const url = repoBase + encodeURIComponent(filename);
+        const layerName = filename.replace(".geojson", "").replace(/_/g, " ");
+		const defaultLayers = [
+		"canvassed art points",
+		"canvassedartwork multipleringbuffer1"
+			];
 
-fileList.forEach(filename => {
-    const url = repoBase + encodeURIComponent(filename);
-    const layerName = filename.replace(".geojson", "").replace(/_/g, " ");
-const defaultLayers = [
-    "canvassed art points",             // This matches "canvassed_art_points.geojson"
-    "CanvassedArtwork MultipleRingBuffer1"  // This matches "CanvassedArtwork_MultipleRingBuffer1.geojson"
-];
+        const shouldLoadByDefault = defaultLayers.includes(layerName.toLowerCase());
 
-const shouldLoadByDefault = defaultLayers.includes(layerName);
+        const color = getRandomColor();
 
-    const color = getRandomColor();
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = layerName;
+        checkbox.checked = shouldLoadByDefault;
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.id = layerName;
-checkbox.checked = shouldLoadByDefault;
+        let layerLoaded = false;
 
+        checkbox.onchange = () => {
+            if (checkbox.checked) {
+                if (!layerLoaded) {
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            const isPoint = data.features?.[0]?.geometry?.type === "Point";
+                            const layer = L.geoJSON(data, {
+                                style: isPoint ? null : {
+                                    color: color,
+                                    fillOpacity: 0.3,
+                                    weight: 1
+                                },
+                                pointToLayer: (feature, latlng) => {
+                                    return L.circleMarker(latlng, {
+                                        radius: 5,
+                                        fillColor: color,
+                                        color: "#000",
+                                        weight: 1,
+                                        opacity: 1,
+                                        fillOpacity: 0.8
+                                    });
+                                },
+                                onEachFeature: (feature, layerEl) => {
+                                    const props = feature.properties || {};
+                                    const popupContent = Object.entries(props)
+                                        .map(([k, v]) => `<b>${k}:</b> ${v}`)
+                                        .join('<br>');
+                                    layerEl.bindPopup(`<b>${layerName}</b><hr>${popupContent}`);
+                                }
+                            });
 
-    let layerLoaded = false;
+                            overlayLayers[layerName] = layer;
+                            map.addLayer(layer);
+                            layerLoaded = true;
 
-    checkbox.onchange = () => {
-        if (checkbox.checked) {
-            if (!layerLoaded) {
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        const isPoint = data.features?.[0]?.geometry?.type === "Point";
-
-                        const layer = L.geoJSON(data, {
-                            style: isPoint ? null : {
-                                color: color,
-                                fillOpacity: 0.3,
-                                weight: 1
-                            },
-                            pointToLayer: (feature, latlng) => {
-                                return L.circleMarker(latlng, {
-                                    radius: 5,
-                                    fillColor: color,
-                                    color: "#000",
-                                    weight: 1,
-                                    opacity: 1,
-                                    fillOpacity: 0.8
-                                });
-                            },
-                            onEachFeature: (feature, layerEl) => {
-                                const props = feature.properties || {};
-                                const popupContent = Object.entries(props)
-                                    .map(([k, v]) => `<b>${k}:</b> ${v}`)
-                                    .join('<br>');
-                                layerEl.bindPopup(`<b>${layerName}</b><hr>${popupContent}`);
-                            }
-                        });
-
-                        overlayLayers[layerName] = layer;
-                        layer.addTo(map);
-                        layerLoaded = true;
-                    })
-                    .catch(err => console.error("Error loading", filename, err));
+                            const legendItem = document.createElement("div");
+                            legendItem.id = `legend-${layerName}`;
+                            legendItem.innerHTML = `<span style="display:inline-block;width:12px;height:12px;background:${color};margin-right:5px;"></span>${layerName}`;
+                            legend.appendChild(legendItem);
+                            legend.style.display = "block";
+                        })
+                        .catch(err => console.error("Error loading", filename, err));
+                } else {
+                    map.addLayer(overlayLayers[layerName]);
+                    if (!document.getElementById(`legend-${layerName}`)) {
+                        const legendItem = document.createElement("div");
+                        legendItem.id = `legend-${layerName}`;
+                        legendItem.innerHTML = `<span style="display:inline-block;width:12px;height:12px;background:${color};margin-right:5px;"></span>${layerName}`;
+                        legend.appendChild(legendItem);
+                        legend.style.display = "block";
+                    }
+                }
             } else {
-                map.addLayer(overlayLayers[layerName]);
+                if (overlayLayers[layerName]) {
+                    map.removeLayer(overlayLayers[layerName]);
+                }
+                const item = document.getElementById(`legend-${layerName}`);
+                if (item) item.remove();
+                if (legend.children.length === 0) {
+                    legend.style.display = "none";
+                }
             }
-        } else {
-            if (overlayLayers[layerName]) {
-                map.removeLayer(overlayLayers[layerName]);
-            }
-        }
-    };
+        };
 
-    const label = document.createElement("label");
-    label.htmlFor = layerName;  // Associate label with checkbox for accessibility
-    label.appendChild(checkbox);
-    label.appendChild(document.createTextNode(" " + layerName));
+        const label = document.createElement("label");
+        label.htmlFor = layerName;
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(" " + layerName));
+        menu.appendChild(label);
 
-    menu.appendChild(label);
-if (shouldLoadByDefault) checkbox.onchange();
-
-});
-
+        if (shouldLoadByDefault) checkbox.onchange();
+    });
     </script>
 </body>
 </html>
