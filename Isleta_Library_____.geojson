@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "Isleta_Library_____",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "library" }, "geometry": { "type": "Point", "coordinates": [ -106.722035700287279, 34.897503079603496, 0.0 ] } }
+]
+}
