@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "Polygons_2",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::6368" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": null, "Text": null, "IntegerValue": null, "DoubleValue": null, "DateTime": null, "Shape_Length": 272870.77579415555, "Shape_Area": 3982543220.8386946 }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 300334.991499999538064, 3899989.555099999532104, 0.0 ], [ 394626.209699999541044, 3897806.888000000268221, 0.0 ], [ 395062.743200000375509, 3856336.213300000876188, 0.0 ], [ 301208.058299999684095, 3856772.7467, 0.0 ], [ 300334.991499999538064, 3899989.555099999532104, 0.0 ] ] ] ] } }
+]
+}

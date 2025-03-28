@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "Polygons_2_1",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::6368" } },
+"features": [
+
+]
+}
