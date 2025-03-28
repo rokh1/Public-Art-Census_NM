@@ -1,6 +1,6 @@
 {
 "type": "FeatureCollection",
-"name": "CanvassedArtwork_ExportFeatures1milepolice",
+"name": "CanvassedArtwork_ExportFeatures2",
 "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
 "features": [
 { "type": "Feature", "properties": { "submission": "00a8ac7f-e758-4d96-ae95-41710ad6a6ea", "Table_ID": "county", "ZCTA5CE20": "87121", "OBJECTID_1": 27, "Join_Count": 1, "TARGET_FID": 27, "TRACTCE": "004715", "GEOID": "35001004715" }, "geometry": { "type": "Point", "coordinates": [ -106.724299333447448, 35.022074832987187 ] } },
