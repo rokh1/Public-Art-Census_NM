@@ -300,12 +300,16 @@ fileList.sort((a, b) => {
                         const isPoint = data.features?.[0]?.geometry?.type === "Point";
 			      const featureCount = data.features.length;
 
-                        const layer = L.geoJSON(data, {
-                            style: isPoint ? null : {
-                                color: color,
-                                fillOpacity: 0.3,
-                                weight: 1
-                            },
+const layer = L.geoJSON(data, {
+    style: function (feature) {
+        if (feature.geometry.type === "Point") return null;
+        return {
+            color: color,
+            fillOpacity: 0.3,
+            weight: 1
+        };
+    },
+
                             pointToLayer: (feature, latlng) => {
                                 return L.circleMarker(latlng, {
                                     radius: 5,
