@@ -350,6 +350,8 @@ const popupContent = `
                         overlayLayers[displayName] = layer;
                         map.addLayer(layer);
                         layerLoaded = true;
+label.lastChild.textContent = `${displayName} (${featureCount})`;
+
                     })
                     .catch(err => console.error("Error loading", filename, err));
             } else {
