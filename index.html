@@ -298,6 +298,8 @@ fileList.sort((a, b) => {
                     .then(response => response.json())
                     .then(data => {
                         const isPoint = data.features?.[0]?.geometry?.type === "Point";
+			      const featureCount = data.features.length;
+
                         const layer = L.geoJSON(data, {
                             style: isPoint ? null : {
                                 color: color,
@@ -340,7 +342,8 @@ const popupContent = `
 
 
 
-                                layerEl.bindPopup(`<b>${displayName}</b><hr>${popupContent}`);
+                                  layerEl.bindPopup(`<b>${displayName}</b><br><i>${featureCount} features</i><hr>${popupContent}`);
+
                             }
                         });
 
