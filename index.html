@@ -40,18 +40,26 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     width: 360px; /* reduced width */
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 4px 12px;
     font-size: 13px;
 }
 
 
 .menu label {
-    display: flex;
-    align-items: center;
-    font-size: 13px;
-    white-space: normal; /* allow wrapping */
-    word-break: break-word; /* if needed */
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 12px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+
+
+.menu label span,
+.menu label input {
+  flex-shrink: 0;
 }
 
 
@@ -155,8 +163,8 @@ function getNextColor() {
         "CanvassedArtwork_ExcludingCityParks_1mileOpenSpace.geojson",
         "CanvassedArtwork_ExportFeatures1milepolice.geojson",
         "CanvassedArtwork_K12_anduni.geojson",
+		"university_college_1mileart.geojson",
         "CanvassedArtwork_MultipleRingBuffer1.geojson",
-        "CanvassedArtwork_OPENSPACE.geojson",
         "CanvassedArtwork_swanson_BernCoParksOpenSpace.geojson",
         "CanvassedArtwork_swanson_partnermanagedspace.geojson",
         "Census_Bern_Summarizefunds.geojson",
@@ -200,7 +208,7 @@ function getNextColor() {
 	
 	
 const prettyNames = {
-  "canvassed_art_points.geojson": "Canvassed Art Points",
+  "canvassed_art_points.geojson": "_Canvassed Art Points",
   "CountyBoundary.geojson": "Bernalillo County boundary",
   "CountyCommissionDistricts.geojson": "County Districts",
   "cleaned_ABQ_points.geojson": "Albuquerque Condition and Art Type",
@@ -217,8 +225,8 @@ const prettyNames = {
   "CanvassedArtwork_ExcludingCityParks_1mileOpenSpace.geojson": "Art Within 1 Mile of Open Space (No City Parks)",
   "CanvassedArtwork_ExportFeatures1milepolice.geojson": "Art Within 1 Mile of Police",
   "CanvassedArtwork_K12_anduni.geojson": "Art Near Schools & Universities",
+  "university_college_1mileart.geojson": " University/College 1 mile from art",
   "CanvassedArtwork_MultipleRingBuffer1.geojson": "Art: Multiple Ring Buffers",
-  "CanvassedArtwork_OPENSPACE.geojson": "Art in Open Space",
   "CanvassedArtwork_swanson_BernCoParksOpenSpace.geojson": "Swanson Art in BernCo Parks",
   "CanvassedArtwork_swanson_partnermanagedspace.geojson": "Swanson Art in Partner-Managed Spaces",
   "Census_Bern_Summarizefunds.geojson": "Census Tracts: Summarized Funds",
@@ -246,8 +254,8 @@ const prettyNames = {
   "KnownInventory.geojson": "Known Art Inventory",
   "cleaned_.geojson": "NM Census Tracts (2020)",
   "cleaned_NM_CensusTracts2020__Project_ExportFeatures.geojson": "NM Census Tracts (2020 Exported)",
-  "NineLandGrant_Merge.geojson": "Nine Land Grants (Merged)",
-  "OpenSpace_PairwiseClip.geojson": "Open Space (Clipped)",
+  "NineLandGrant_Merge.geojson": "Land Grants",
+  "OpenSpace_PairwiseClip.geojson": "Open Space",
   "SPECIALZONES_Original_ExportTable_XYTableToPoint.geojson": "Original Special Zones (XY Points)",
   "Tohajiilee_artwork_specialpoints.geojson": "To’Hajiilee Special Art Points",
   "TrainStops_ExportFeatures.geojson": "Train Stops",
@@ -269,7 +277,7 @@ fileList.sort((a, b) => {
     const url = repoBase + encodeURIComponent(filename);
     const displayName = prettyNames[filename] || filename.replace(".geojson", "").replace(/_/g, " ");
     const defaultLayers = [
-        "canvassed art points",
+        "_Canvassed Art Points",
         "canvassedartwork multipleringbuffer1"
     ];
 
