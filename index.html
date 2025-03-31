@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Public Art Census</title>
+    <title>Dynamic GIS Layers</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -38,21 +38,24 @@
     z-index: 1000;
     border-radius: 5px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    width: 480px; /* wider */
+    width: 360px; /* reduced width */
     display: grid;
-    grid-template-columns: 1fr 1fr; /* two columns */
-    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 13px;
 }
 
 
 .menu label {
     display: flex;
     align-items: center;
-    font-size: 14px;
-    white-space: nowrap;
+    font-size: 13px;
+    white-space: normal; /* allow wrapping */
+    word-break: break-word; /* if needed */
 }
 
-@media (max-width: 600px) {
+
+@media (max-width: 768px) {
     .menu {
         grid-template-columns: 1fr;
         width: 90vw;
@@ -82,7 +85,6 @@
     <div id="map"></div>
     <button id="toggleMenu" class="toggle-button">☰ Layers</button>
     <div class="menu" id="layerMenu" style="display: none;"></div>
-    <div id="legend"></div>
 
     <script>
     const map = L.map('map').setView([35.0844, -106.6504], 11);
@@ -128,7 +130,6 @@ document.getElementById('toggleMenu').onclick = function () {
     const fileList = [
         "canvassed_art_points.geojson",
         "ABQ_points.geojson",
-        "AllSpecialZones.geojson",
         "AllSpecialZones_Chililigrant.geojson",
         "AllSpecialZones_Isleta.geojson",
         "AllSpecialZones_Tohajiilee.geojson",
@@ -180,7 +181,6 @@ document.getElementById('toggleMenu').onclick = function () {
         "New_Mexico_walk__SpatialJoin.geojson",
         "NineLandGrant_Merge.geojson",
         "OpenSpace_PairwiseClip.geojson",
-        "PublicArtWorks_ExportFeatures.geojson",
         "RoadInventory_Erase.geojson",
         "RoadInventory_Erase1.geojson",
         "SIGSONLYPERCENTAGESTABLE.geojson",
@@ -193,105 +193,186 @@ document.getElementById('toggleMenu').onclick = function () {
         "WalkabilityandArtDensity_highwalkart.geojson",
         "c2020CensusTract_SpatialJoin.geojson",
         "c2020CensusTract_SpatialJoinfunds.geojson",
-        "canonpoints_only.geojson",
         "cb_2020_35_joined.geojson",
         "cb_2020_35_joined_ExportFeatures.geojson",
         "zipcodes__MODES.geojson"
     ];
 	
 	
-fileList.sort().forEach(filename => {
-        const url = repoBase + encodeURIComponent(filename);
-        const layerName = filename.replace(".geojson", "").replace(/_/g, " ");
-		const defaultLayers = [
-		"canvassed art points",
-		"canvassedartwork multipleringbuffer1"
-			];
+const prettyNames = {
+  "canvassed_art_points.geojson": "Canvassed Art Points",
+  "ABQ_points.geojson": "Albuquerque Reference Points",
+  "AllSpecialZones_Chililigrant.geojson": "Chilili Land Grant Zones",
+  "AllSpecialZones_Isleta.geojson": "Isleta Zones",
+  "AllSpecialZones_Tohajiilee.geojson": "To’Hajiilee Zones",
+  "AllSpecialZones_Tohajiilee_tribal.geojson": "To’Hajiilee Tribal Zones",
+  "AllSpecialZones_iselta_library.geojson": "Isleta Library",
+  "AllSpecialZones_iseltapolice.geojson": "Isleta Police Station",
+  "ArtworkwithArtistSignatureonly.geojson": "Artworks with Artist Signatures",
+  "Book1_countyartjan6_ExportTable_XYTableToPoint.geojson": "County Art Points (Jan 6 Export)",
+  "CanvassedArtwork_1mile_hospitals.geojson": "Art Within 1 Mile of Hospitals",
+  "CanvassedArtwork_480within1mileforest.geojson": "480 Art Points Near Forests",
+  "CanvassedArtwork_ExcludingCityParks_1mileOpenSpace.geojson": "Art Within 1 Mile of Open Space (No City Parks)",
+  "CanvassedArtwork_ExportFeatures1milepolice.geojson": "Art Within 1 Mile of Police",
+  "CanvassedArtwork_K12_anduni.geojson": "Art Near Schools & Universities",
+  "CanvassedArtwork_MultipleRingBuffer1.geojson": "Art: Multiple Ring Buffers",
+  "CanvassedArtwork_OPENSPACE.geojson": "Art in Open Space",
+  "CanvassedArtwork_swanson_BernCoParksOpenSpace.geojson": "Swanson Art in BernCo Parks",
+  "CanvassedArtwork_swanson_partnermanagedspace.geojson": "Swanson Art in Partner-Managed Spaces",
+  "Census_Bern_Summarizefunds.geojson": "Census Tracts: Summarized Funds",
+  "Census_Bern_demographics.geojson": "Census Tracts: Demographics",
+  "Census_publicArtDeserts.geojson": "Public Art Deserts",
+  "Censustracts_80AMI_andbelow_ExportFeatures.geojson": "Census Tracts ≤ 80% AMI",
+  "Censustracts_80AMI_andbelow_lowtonoartwork.geojson": "Low/No Artwork in ≤ 80% AMI Tracts",
+  "CitiesCommunities_ExportFeatures.geojson": "Cities and Communities",
+  "CityParks_PairwiseClip.geojson": "City Parks (Clipped)",
+  "City_only.geojson": "City Boundary",
+  "City_only_points.geojson": "City Points",
+  "CountyCity_ArtistSigsonly.geojson": "County + City: Artist Signatures Only",
+  "CountyCity_Identifier.geojson": "County + City: Area Identifiers",
+  "CountyCity_Identifier_Citystats.geojson": "City-Level Statistics",
+  "CountyCity_Identifier_Citystats_countystats_All.geojson": "City + County Statistics (All)",
+  "CountyCity_Ready_Sept2024.geojson": "City + County (Ready Sept 2024)",
+  "CountyCity_Ready_Sept2024_8_zip.geojson": "City + County ZIP Codes (8 Zones)",
+  "CountyCity_ethnicity_sub.geojson": "County + City: Ethnicity Breakdown",
+  "CountyPublicFund_ALLMEDIANzip_district.geojson": "Public Funds by ZIP Code District",
+  "County_only.geojson": "County Boundary",
+  "Countycity_publicFunds_Merge.geojson": "Merged Public Funding (City + County)",
+  "Countycity_publicFunds_median.geojson": "Median Public Funding (City + County)",
+  "EJSCREEN_StateP_PairwiseClip.geojson": "EJSCREEN Indicators (Clipped)",
+  "EPA_Air_Monitors.geojson": "EPA Air Quality Monitors",
+  "Isleta_Artwork_specialpoints.geojson": "Isleta: Special Art Points",
+  "KnownCity.geojson": "Known City Boundaries",
+  "KnownCounty.geojson": "Known County Boundaries",
+  "KnownInventory.geojson": "Known Art Inventory",
+  "NM_CensusTracts2020__Project.geojson": "NM Census Tracts (2020)",
+  "NM_CensusTracts2020__Project_ExportFeatures.geojson": "NM Census Tracts (2020 Exported)",
+  "NationalWalkabilityIndex_NewMexico.geojson": "Walkability Index (New Mexico)",
+  "New_Mexico_walk_Bern.geojson": "Walkability: Bernalillo County",
+  "New_Mexico_walk_PairwiseClip.geojson": "Walkability (Clipped)",
+  "New_Mexico_walk__SpatialJoin.geojson": "Walkability (Spatial Join)",
+  "NineLandGrant_Merge.geojson": "Nine Land Grants (Merged)",
+  "OpenSpace_PairwiseClip.geojson": "Open Space (Clipped)",
+  "RoadInventory_Erase.geojson": "Road Inventory (Erased Version)",
+  "RoadInventory_Erase1.geojson": "Road Inventory (Alt. Erase)",
+  "SIGSONLYPERCENTAGESTABLE.geojson": "Artist Signatures: Percentage Table",
+  "SPECIALZONES_Original_ExportTable_XYTableToPoint.geojson": "Original Special Zones (XY Points)",
+  "Tohajiilee_artwork_specialpoints.geojson": "To’Hajiilee Special Art Points",
+  "TrainStops_ExportFeatures.geojson": "Train Stops",
+  "Walkability_Bern_ARTJOIN.geojson": "Walkability + Art Density (Bernalillo)",
+  "WalkabilityandArtDensity_ClustersOutliers.geojson": "Art + Walkability: Clusters & Outliers",
+  "WalkabilityandArtDensity_ExportFeatures.geojson": "Art + Walkability: Exported",
+  "WalkabilityandArtDensity_highwalkart.geojson": "High Walkability + Art Density",
+  "c2020CensusTract_SpatialJoin.geojson": "Census Tracts 2020 (Spatial Join)",
+  "c2020CensusTract_SpatialJoinfunds.geojson": "Census Tracts 2020 + Funds",
+  "cb_2020_35_joined.geojson": "Census Block (2020) - Joined",
+  "cb_2020_35_joined_ExportFeatures.geojson": "Census Block (2020) - Exported Features",
+  "zipcodes__MODES.geojson": "ZIP Codes: Most Common Art Type"
+};
 
-        const shouldLoadByDefault = defaultLayers.includes(layerName.toLowerCase());
 
-        const color = getRandomColor();
+fileList.sort((a, b) => {
+    const nameA = prettyNames[a] || a;
+    const nameB = prettyNames[b] || b;
+    return nameA.localeCompare(nameB);
+}).forEach(filename => {
+    const url = repoBase + encodeURIComponent(filename);
+    const displayName = prettyNames[filename] || filename.replace(".geojson", "").replace(/_/g, " ");
+    const defaultLayers = [
+        "canvassed art points",
+        "canvassedartwork multipleringbuffer1"
+    ];
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.id = layerName;
-        checkbox.checked = shouldLoadByDefault;
+    const shouldLoadByDefault = defaultLayers.includes(displayName.toLowerCase());
 
-        let layerLoaded = false;
+    const color = getRandomColor();
 
-        checkbox.onchange = () => {
-            if (checkbox.checked) {
-                if (!layerLoaded) {
-                    fetch(url)
-                        .then(response => response.json())
-                        .then(data => {
-                            const isPoint = data.features?.[0]?.geometry?.type === "Point";
-                            const layer = L.geoJSON(data, {
-                                style: isPoint ? null : {
-                                    color: color,
-                                    fillOpacity: 0.3,
-                                    weight: 1
-                                },
-                                pointToLayer: (feature, latlng) => {
-                                    return L.circleMarker(latlng, {
-                                        radius: 5,
-                                        fillColor: color,
-                                        color: "#000",
-                                        weight: 1,
-                                        opacity: 1,
-                                        fillOpacity: 0.8
-                                    });
-                                },
-                                onEachFeature: (feature, layerEl) => {
-                                    const props = feature.properties || {};
-                                    const popupContent = Object.entries(props)
-                                        .map(([k, v]) => `<b>${k}:</b> ${v}`)
-                                        .join('<br>');
-                                    layerEl.bindPopup(`<b>${layerName}</b><hr>${popupContent}`);
-                                }
-                            });
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = displayName;
+    checkbox.checked = shouldLoadByDefault;
 
-                            overlayLayers[layerName] = layer;
-                            map.addLayer(layer);
-                            layerLoaded = true;
+    let layerLoaded = false;
 
-                            const legendItem = document.createElement("div");
-                            legendItem.id = `legend-${layerName}`;
-                            legendItem.innerHTML = `<span style="display:inline-block;width:12px;height:12px;background:${color};margin-right:5px;"></span>${layerName}`;
-                            legend.appendChild(legendItem);
-                            legend.style.display = "block";
-                        })
-                        .catch(err => console.error("Error loading", filename, err));
-                } else {
-                    map.addLayer(overlayLayers[layerName]);
-                    if (!document.getElementById(`legend-${layerName}`)) {
-                        const legendItem = document.createElement("div");
-                        legendItem.id = `legend-${layerName}`;
-                        legendItem.innerHTML = `<span style="display:inline-block;width:12px;height:12px;background:${color};margin-right:5px;"></span>${layerName}`;
-                        legend.appendChild(legendItem);
-                        legend.style.display = "block";
-                    }
-                }
+    checkbox.onchange = () => {
+        if (checkbox.checked) {
+            if (!layerLoaded) {
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const isPoint = data.features?.[0]?.geometry?.type === "Point";
+                        const layer = L.geoJSON(data, {
+                            style: isPoint ? null : {
+                                color: color,
+                                fillOpacity: 0.3,
+                                weight: 1
+                            },
+                            pointToLayer: (feature, latlng) => {
+                                return L.circleMarker(latlng, {
+                                    radius: 5,
+                                    fillColor: color,
+                                    color: "#000",
+                                    weight: 1,
+                                    opacity: 1,
+                                    fillOpacity: 0.8
+                                });
+                            },
+                            onEachFeature: (feature, layerEl) => {
+                                const props = feature.properties || {};
+const filteredEntries = Object.entries(props).filter(([k, v]) => v !== null && v !== "null" && v !== "NA");
+
+const popupContent = `
+    <div style="display: grid; grid-template-columns: auto auto; column-gap: 10px; row-gap: 6px; font-size: 13px;">
+        ${filteredEntries.map(([k, v]) => {
+            const displayValue = typeof v === 'string' && v.length > 30 ? v.slice(0, 30) + "…" : v;
+            return `
+                <div style="font-weight: bold;">${k}:</div>
+                <div>${displayValue}</div>
+            `;
+        }).join("")}
+    </div>`;
+
+
+                                layerEl.bindPopup(`<b>${displayName}</b><hr>${popupContent}`);
+                            }
+                        });
+
+                        overlayLayers[displayName] = layer;
+                        map.addLayer(layer);
+                        layerLoaded = true;
+                    })
+                    .catch(err => console.error("Error loading", filename, err));
             } else {
-                if (overlayLayers[layerName]) {
-                    map.removeLayer(overlayLayers[layerName]);
-                }
-                const item = document.getElementById(`legend-${layerName}`);
-                if (item) item.remove();
-                if (legend.children.length === 0) {
-                    legend.style.display = "none";
-                }
+                map.addLayer(overlayLayers[displayName]);
             }
-        };
+        } else {
+            if (overlayLayers[displayName]) {
+                map.removeLayer(overlayLayers[displayName]);
+            }
+        }
+    };
 
-        const label = document.createElement("label");
-        label.htmlFor = layerName;
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(" " + layerName));
-        menu.appendChild(label);
+    const label = document.createElement("label");
+    label.htmlFor = displayName;
 
-        if (shouldLoadByDefault) checkbox.onchange();
-    });
+    const swatch = document.createElement("span");
+    swatch.style.display = "inline-block";
+    swatch.style.width = "12px";
+    swatch.style.height = "12px";
+    swatch.style.backgroundColor = color;
+    swatch.style.marginRight = "6px";
+    swatch.style.border = "1px solid #000";
+    swatch.style.flexShrink = "0";
+    swatch.style.borderRadius = "2px";
+
+    label.appendChild(checkbox);
+    label.appendChild(swatch);
+    label.appendChild(document.createTextNode(displayName));
+    menu.appendChild(label);
+
+    if (shouldLoadByDefault) checkbox.onchange();
+});
+
     </script>
 </body>
 </html>
