@@ -296,67 +296,63 @@ fileList.sort((a, b) => {
             if (!layerLoaded) {
                 fetch(url)
                     .then(response => response.json())
-                    .then(data => {
-                        const isPoint = data.features?.[0]?.geometry?.type === "Point";
-			      const featureCount = data.features.length;
+.then(data => {
+    const isPoint = data.features?.[0]?.geometry?.type === "Point";
+    const featureCount = data.features.length;
 
-const layer = L.geoJSON(data, {
-    style: function (feature) {
-        if (feature.geometry.type === "Point") return null;
-        return {
-            color: color,
-            fillOpacity: 0.3,
-            weight: 1
-        };
-    },
+    // ✅ Correct placement of your log block
+    console.log(`✅ Loaded ${filename}: ${featureCount} features`);
+    if (featureCount > 0) {
+        console.log("📌 First feature geometry type:", data.features[0].geometry?.type);
+        console.log("🧱 Sample coordinates:", JSON.stringify(data.features[0].geometry?.coordinates?.slice(0, 1), null, 2));
+        console.log("📋 Sample properties:", data.features[0].properties);
+    }
 
-                            pointToLayer: (feature, latlng) => {
-                                return L.circleMarker(latlng, {
-                                    radius: 5,
-                                    fillColor: color,
-                                    color: "#000",
-                                    weight: 1,
-                                    opacity: 1,
-                                    fillOpacity: 0.8
-                                });
-                            },
-                            onEachFeature: (feature, layerEl) => {
-                                const props = feature.properties || {};
-const filteredEntries = Object.entries(props).filter(([k, v]) => v !== null && v !== "null" && v !== "NA");
+    const layer = L.geoJSON(data, {
+        style: function (feature) {
+            if (feature.geometry.type === "Point") return null;
+            return {
+                color: "#228B22",
+                fillColor: "#7CFC00",
+                fillOpacity: 0.5,
+                weight: 2
+            };
+        },
+        pointToLayer: (feature, latlng) => {
+            return L.circleMarker(latlng, {
+                radius: 5,
+                fillColor: color,
+                color: "#000",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            });
+        },
+        onEachFeature: (feature, layerEl) => {
+            const props = feature.properties || {};
+            const filteredEntries = Object.entries(props).filter(([k, v]) =>
+                v !== null && v !== "null" && v !== "NA"
+            );
+            const popupContent = `
+              <div style="display: grid; grid-template-columns: auto auto; column-gap: 10px; row-gap: 6px; font-size: 13px; max-width: 300px;">
+                ${filteredEntries.map(([k, v]) => {
+                    const displayValue = typeof v === 'string' && v.length > 60 ? v.slice(0, 60) + "…" : v;
+                    return `
+                        <div style="font-weight: bold;">${k}:</div>
+                        <div style="overflow-wrap: break-word;">${displayValue}</div>
+                    `;
+                }).join("")}
+              </div>`;
+            layerEl.bindPopup(`<b>${displayName}</b><br><i>${featureCount} features</i><hr>${popupContent}`);
+        }
+    });
 
-const popupContent = `
-  <div style="
-    display: grid;
-    grid-template-columns: auto auto;
-    column-gap: 10px;
-    row-gap: 6px;
-    font-size: 13px;
-    word-wrap: break-word;
-    word-break: break-word;
-    max-width: 300px;
-  ">
-    ${filteredEntries.map(([k, v]) => {
-      const displayValue = typeof v === 'string' && v.length > 60 ? v.slice(0, 60) + "…" : v;
-      return `
-        <div style="font-weight: bold;">${k}:</div>
-        <div style="overflow-wrap: break-word;">${displayValue}</div>
-      `;
-    }).join("")}
-  </div>`;
+    overlayLayers[displayName] = layer;
+    map.addLayer(layer);
+    layerLoaded = true;
+    label.lastChild.textContent = `${displayName} (${featureCount})`;
+})
 
-
-
-                                  layerEl.bindPopup(`<b>${displayName}</b><br><i>${featureCount} features</i><hr>${popupContent}`);
-
-                            }
-                        });
-
-                        overlayLayers[displayName] = layer;
-                        map.addLayer(layer);
-                        layerLoaded = true;
-label.lastChild.textContent = `${displayName} (${featureCount})`;
-
-                    })
                     .catch(err => console.error("Error loading", filename, err));
             } else {
                 map.addLayer(overlayLayers[displayName]);
@@ -388,6 +384,8 @@ label.lastChild.textContent = `${displayName} (${featureCount})`;
 
     if (shouldLoadByDefault) checkbox.onchange();
 });
+
+
 
     </script>
 </body>
