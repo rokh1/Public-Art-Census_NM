@@ -117,14 +117,24 @@ document.getElementById('toggleMenu').onclick = function () {
     const menu = document.getElementById("layerMenu");
     const repoBase = "https://mckeont.github.io/geojsons_bern_interactive/";
 
-    function getRandomColor() {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-    }
+const colorPalette = [
+    "#E69F00", // orange
+    "#56B4E9", // sky blue
+    "#009E73", // bluish green
+    "#F0E442", // yellow
+    "#0072B2", // blue
+    "#D55E00", // vermillion
+    "#CC79A7", // reddish purple
+    "#999999"  // gray
+];
+
+let colorIndex = 0;
+
+function getNextColor() {
+    const color = colorPalette[colorIndex % colorPalette.length];
+    colorIndex++;
+    return color;
+}
 
 
     const fileList = [
@@ -133,7 +143,7 @@ document.getElementById('toggleMenu').onclick = function () {
 		"CountyCommissionDistricts.geojson",
         "cleaned_ABQ_points.geojson",
         "cleaned_AllSpecialZones_Chililigrant.geojson",
-        "AllSpecialZones_Isleta.geojson",
+        "cleaned_AllSpecialZones_Isleta.geojson",
         "cleaned_AllSpecialZones_Tohajiilee.geojson",
         "cleaned_AllSpecialZones_Tohajiilee_tribal.geojson",
         "cleaned_AllSpecialZones_iselta_library.geojson",
@@ -193,9 +203,9 @@ const prettyNames = {
   "canvassed_art_points.geojson": "Canvassed Art Points",
   "CountyBoundary.geojson": "Bernalillo County boundary",
   "CountyCommissionDistricts.geojson": "County Districts",
-  "cleaned_ABQ_points.geojson": "Albuquerque Reference Points",
+  "cleaned_ABQ_points.geojson": "Albuquerque Condition and Art Type",
   "cleaned_AllSpecialZones_Chililigrant.geojson": "Chilili Land Grant Zones",
-  "cleaned_AllSpecialZones_Isleta.geojson": "Isleta Zones",
+  "cleaned_AllSpecialZones_Isleta.geojson": "Isleta points",
   "cleaned_AllSpecialZones_Tohajiilee.geojson": "To’Hajiilee Zones",
   "cleaned_AllSpecialZones_Tohajiilee_tribal.geojson": "To’Hajiilee Tribal Zones",
   "cleaned_AllSpecialZones_iselta_library.geojson": "Isleta Library",
@@ -265,7 +275,8 @@ fileList.sort((a, b) => {
 
     const shouldLoadByDefault = defaultLayers.includes(displayName.toLowerCase());
 
-    const color = getRandomColor();
+    const color = getNextColor();
+;
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -295,8 +306,8 @@ fileList.sort((a, b) => {
         style: function (feature) {
             if (feature.geometry.type === "Point") return null;
             return {
-                color: "#228B22",
-                fillColor: "#7CFC00",
+                color: "#000",
+                fillColor: color,
                 fillOpacity: 0.5,
                 weight: 2
             };
