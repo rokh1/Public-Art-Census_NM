@@ -26,50 +26,42 @@
             cursor: pointer;
             font-size: 16px;
         }
-
-.menu {
-    position: absolute;
-    top: 50px;
-    left: 10px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 10px;
-    max-height: 85vh;
-    overflow-y: auto;
-    z-index: 1000;
-    border-radius: 5px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    width: 360px; /* reduced width */
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 4px 12px;
-    font-size: 13px;
-}
-
-
-.menu label {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  font-size: 12px;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  line-height: 1.2;
-}
-
-
-.menu label span,
-.menu label input {
-  flex-shrink: 0;
-}
-
-
-@media (max-width: 768px) {
-    .menu {
-        grid-template-columns: 1fr;
-        width: 90vw;
-    }
-}
-
+        .menu {
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            max-height: 85vh;
+            overflow-y: auto;
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            width: 360px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 4px 12px;
+            font-size: 13px;
+        }
+        .menu label {
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+            font-size: 12px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            line-height: 1.2;
+        }
+        .menu label span,
+        .menu label input {
+            flex-shrink: 0;
+        }
+        @media (max-width: 768px) {
+            .menu {
+                grid-template-columns: 1fr;
+                width: 90vw;
+            }
+        }
         #legend {
             position: absolute;
             bottom: 30px;
@@ -80,13 +72,10 @@
             font-size: 12px;
             border-radius: 5px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            max-height: 200px;
+            max-height: 40vh;
             overflow-y: auto;
             display: none;
-			max-height: 40vh; /* instead of fixed 200px */
         }
-		
-
     </style>
 </head>
 <body>
@@ -98,11 +87,11 @@
     const map = L.map('map').setView([35.0844, -106.6504], 11);
     const legend = document.getElementById("legend");
 
-document.getElementById('toggleMenu').onclick = function () {
-    const menu = document.getElementById('layerMenu');
-    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-    if (menu.style.display === 'block') menu.scrollTop = 0;
-};
+    document.getElementById('toggleMenu').onclick = function () {
+        const menu = document.getElementById('layerMenu');
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        if (menu.style.display === 'block') menu.scrollTop = 0;
+    };
 
     L.control.scale().addTo(map);
 
@@ -125,27 +114,16 @@ document.getElementById('toggleMenu').onclick = function () {
     const menu = document.getElementById("layerMenu");
     const repoBase = "https://mckeont.github.io/geojsons_bern_interactive/";
 
-const colorPalette = [
-    "#E69F00", // orange
-    "#56B4E9", // sky blue
-    "#009E73", // bluish green
-    "#F0E442", // yellow
-    "#0072B2", // blue
-    "#D55E00", // vermillion
-    "#CC79A7", // reddish purple
-    "#999999"  // gray
-];
+    const colorPalette = [
+        "#E69F00", "#56B4E9", "#009E73", "#F0E442",
+        "#0072B2", "#D55E00", "#CC79A7", "#999999"
+    ];
+    let colorIndex = 0;
+    function getNextColor() {
+        return colorPalette[colorIndex++ % colorPalette.length];
+    }
 
-let colorIndex = 0;
-
-function getNextColor() {
-    const color = colorPalette[colorIndex % colorPalette.length];
-    colorIndex++;
-    return color;
-}
-
-
-    const fileList = [
+const fileList = [
         "canvassed_art_points.geojson",
 		"CountyBoundary.geojson",
 		"CountyCommissionDistricts.geojson",
@@ -248,126 +226,150 @@ const prettyNames = {
 };
 
 
-fileList.sort((a, b) => {
-    const nameA = prettyNames[a] || a;
-    const nameB = prettyNames[b] || b;
-    return nameA.localeCompare(nameB);
-}).forEach(filename => {
-    const url = repoBase + encodeURIComponent(filename);
-    const displayName = prettyNames[filename] || filename.replace(".geojson", "").replace(/_/g, " ");
-    const defaultLayers = [
-        "_Canvassed Art Points",
-        "canvassedartwork multipleringbuffer1"
-    ];
+const layerGroups = {
+  "Public Art": {
+    "canvassed_art_points.geojson": "Points of All Canvassed Art in Public Across Bernalillo County",
+    "City_only_points.geojson": "Albuquerque Art Points",
+    "CountyCity_Identifier_Citystats.geojson": "All Canvassed Artworks",
+    "County_only.geojson": "County Art Points",
+    "CountyCity_ArtistSigsonly.geojson": "Artworks with Artist Signatures",
+    "KnownCity.geojson": "Known City of Albuquerque Art Points",
+    "KnownCounty.geojson": "Known Bernalillo County Art Points",
+    "KnownInventory.geojson": "Known City & County Inventory Combined",
+    "cleaned_Isleta_Artwork_specialpoints.geojson": "Isleta Art Points"
+  },
 
-    const shouldLoadByDefault = defaultLayers.includes(displayName.toLowerCase());
+  "Area Information": {
+    "cleaned_.geojson": "NM Census Tracts (2020)",
+    "cleaned_NM_CensusTracts2020__Project.geojson": "Census Tracts 2020",
+    "cleaned_NM_CensusTracts2020__Project_ExportFeatures.geojson": "NM Census Tracts (2020)",
+    "Census_Bern_demographics.geojson": "Census Tracts: Demographics",
+    "cb_2020_35_joined.geojson": "Census Block (2020) New Mexico State",
+    "zipcodes__MODES.geojson": "Most Common Art Type within Each Zip Code",
+    "CitiesCommunities_ExportFeatures.geojson": "County, City, and Community Boundaries",
+    "CountyBoundary.geojson": "Bernalillo County boundary",
+    "CountyCommissionDistricts.geojson": "County Districts Boundaries",
+    "NineLandGrant_Merge.geojson": "Land Grant Boundaries",
+    "OpenSpace_PairwiseClip.geojson": "Open Space Boundaries",
+    "cleaned_CityParks_PairwiseClip.geojson": "Parks within Albuquerque",
+    "City_only.geojson": "Within City Areas"
+  },
 
-    const color = getNextColor();
-;
+  "Special Zones": {
+    "cleaned_AllSpecialZones_Chililigrant.geojson": "Chilili Land Grant Zones",
+    "cleaned_AllSpecialZones_Tohajiilee_tribal.geojson": "To’Hajiilee Art Points",
+    "cleaned_AllSpecialZones_iselta_library.geojson": "Isleta Library",
+    "cleaned_AllSpecialZones_iseltapolice.geojson": "Isleta Police Station"
+  },
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.id = displayName;
-    checkbox.checked = shouldLoadByDefault;
+  "Artwork & Interventions": {
+    "cleaned_ABQ_points.geojson": "Albuquerque Condition and Art Type",
+    "CanvassedArtwork_1mile_hospitals.geojson": "Art within 1 Mile of Hospitals",
+    "CanvassedArtwork_480within1mileforest.geojson": "Art Points within 1 mile of Forests",
+    "CanvassedArtwork_ExcludingCityParks_1mileOpenSpace.geojson": "Art within 1 Mile of Open Space (No City Parks)",
+    "CanvassedArtwork_ExportFeatures1milepolice.geojson": "Art within 1 mile of Police Station",
+    "CanvassedArtwork_K12_anduni.geojson": "Art within 1 mile of Schools & Universities",
+    "university_college_1mileart.geojson": "Art within 1 mile of University/College",
+    "CanvassedArtwork_swanson_BernCoParksOpenSpace.geojson": "Art within 1 mile of BernCo Parks",
+    "CanvassedArtwork_swanson_partnermanagedspace.geojson": "Swanson Art in Partner-Managed Spaces",
+    "CanvassedArtwork_MultipleRingBuffer1.geojson": "Distance to nearest Artwork in Miles"
+  },
 
-    let layerLoaded = false;
+  "Environmental & EJ": {
+    "Countycity_publicFunds_Merge.geojson": "Location of EPA Air Quality Monitors",
+    "EPA_Air_Monitors.geojson": "EPA Air Quality Monitors",
+    "EJSCREEN_StateP_PairwiseClip.geojson": "EJSCREEN Indicators (Clipped)"
+  },
 
-    checkbox.onchange = () => {
-        if (checkbox.checked) {
-            if (!layerLoaded) {
-                fetch(url)
-                    .then(response => response.json())
-.then(data => {
-    const isPoint = data.features?.[0]?.geometry?.type === "Point";
-    const featureCount = data.features.length;
+  "Walkability & Art Density": {
+    "Walkability_Bern_ARTJOIN.geojson": "Walkability + Art Density (Bernalillo)",
+    "cleaned_WalkabilityandArtDensity_highwalkart.geojson": "High Walkability + Art Density"
+  },
 
-    // ✅ Correct placement of your log block
-    console.log(`✅ Loaded ${filename}: ${featureCount} features`);
-    if (featureCount > 0) {
-        console.log("📌 First feature geometry type:", data.features[0].geometry?.type);
-        console.log("🧱 Sample coordinates:", JSON.stringify(data.features[0].geometry?.coordinates?.slice(0, 1), null, 2));
-        console.log("📋 Sample properties:", data.features[0].properties);
-    }
+  "Transit & Access": {
+    "ABQ_Ride_bus_routes_EPSG4326.geojson": "Bus Routes",
+    "TrainStops_ExportFeatures.geojson": "Train Stops"
+  },
 
-    const layer = L.geoJSON(data, {
-        style: function (feature) {
-            if (feature.geometry.type === "Point") return null;
-            return {
-                color: "#000",
-                fillColor: color,
-                fillOpacity: 0.5,
-                weight: 2
+  "Investment Data": {
+    "Census_Bern_Summarizefunds.geojson": "Art Investments by Census Tracts"
+  },
+
+  "Public Art Deserts": {
+    "Census_publicArtDeserts.geojson": "Public Art Deserts Type 1= Census Tracts without Artwork",
+    "Censustracts_80AMI_andbelow_ExportFeatures.geojson": "Census Tracts ≤ 80% AMI",
+    "Censustracts_80AMI_andbelow_lowtonoartwork.geojson": "Low/No Artwork in ≤ 80% AMI Tracts"
+  }
+};
+    // Render grouped layers
+    Object.entries(layerGroups).forEach(([groupName, files]) => {
+        const groupHeader = document.createElement("div");
+        groupHeader.style.cssText = "grid-column: 1 / -1; font-weight: bold; margin: 8px 0 4px; font-size: 13px; color: #444;";
+        groupHeader.textContent = groupName;
+        menu.appendChild(groupHeader);
+
+        Object.entries(files).forEach(([filename, displayName]) => {
+            const url = repoBase + encodeURIComponent(filename);
+            const color = getNextColor();
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.id = displayName;
+
+            let layerLoaded = false;
+
+            checkbox.onchange = () => {
+                if (checkbox.checked) {
+                    if (!layerLoaded) {
+                        fetch(url)
+                            .then(res => res.json())
+                            .then(data => {
+                                const isPoint = data.features?.[0]?.geometry?.type === "Point";
+                                const featureCount = data.features.length;
+
+                                const layer = L.geoJSON(data, {
+                                    style: f => f.geometry.type !== "Point" ? {
+                                        color: "#000", fillColor: color, fillOpacity: 0.5, weight: 2
+                                    } : null,
+                                    pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+                                        radius: 5, fillColor: color, color: "#000",
+                                        weight: 1, opacity: 1, fillOpacity: 0.8
+                                    }),
+                                    onEachFeature: (feature, layerEl) => {
+                                        const props = feature.properties || {};
+                                        const filtered = Object.entries(props)
+                                            .filter(([k, v]) => v && v !== "NA" && v !== "null");
+                                        const popup = `<div style='display: grid; grid-template-columns: auto auto; column-gap: 10px; row-gap: 6px; font-size: 13px; max-width: 300px;'>` +
+                                            filtered.map(([k, v]) => `<div style='font-weight: bold;'>${k}:</div><div>${typeof v === 'string' && v.length > 60 ? v.slice(0, 60) + '…' : v}</div>`).join('') +
+                                            `</div>`;
+                                        layerEl.bindPopup(`<b>${displayName}</b><br><i>${featureCount} features</i><hr>${popup}`);
+                                    }
+                                });
+
+                                overlayLayers[displayName] = layer;
+                                map.addLayer(layer);
+                                layerLoaded = true;
+                                label.lastChild.textContent = `${displayName} (${featureCount})`;
+                            });
+                    } else {
+                        map.addLayer(overlayLayers[displayName]);
+                    }
+                } else {
+                    if (overlayLayers[displayName]) map.removeLayer(overlayLayers[displayName]);
+                }
             };
-        },
-        pointToLayer: (feature, latlng) => {
-            return L.circleMarker(latlng, {
-                radius: 5,
-                fillColor: color,
-                color: "#000",
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.8
-            });
-        },
-        onEachFeature: (feature, layerEl) => {
-            const props = feature.properties || {};
-            const filteredEntries = Object.entries(props).filter(([k, v]) =>
-                v !== null && v !== "null" && v !== "NA"
-            );
-            const popupContent = `
-              <div style="display: grid; grid-template-columns: auto auto; column-gap: 10px; row-gap: 6px; font-size: 13px; max-width: 300px;">
-                ${filteredEntries.map(([k, v]) => {
-                    const displayValue = typeof v === 'string' && v.length > 60 ? v.slice(0, 60) + "…" : v;
-                    return `
-                        <div style="font-weight: bold;">${k}:</div>
-                        <div style="overflow-wrap: break-word;">${displayValue}</div>
-                    `;
-                }).join("")}
-              </div>`;
-            layerEl.bindPopup(`<b>${displayName}</b><br><i>${featureCount} features</i><hr>${popupContent}`);
-        }
+
+            const label = document.createElement("label");
+            label.htmlFor = displayName;
+
+            const swatch = document.createElement("span");
+            swatch.style.cssText = `display:inline-block;width:12px;height:12px;background-color:${color};margin-right:6px;border:1px solid #000;border-radius:2px;`;
+
+            label.appendChild(checkbox);
+            label.appendChild(swatch);
+            label.appendChild(document.createTextNode(displayName));
+            menu.appendChild(label);
+        });
     });
-
-    overlayLayers[displayName] = layer;
-    map.addLayer(layer);
-    layerLoaded = true;
-    label.lastChild.textContent = `${displayName} (${featureCount})`;
-})
-
-                    .catch(err => console.error("Error loading", filename, err));
-            } else {
-                map.addLayer(overlayLayers[displayName]);
-            }
-        } else {
-            if (overlayLayers[displayName]) {
-                map.removeLayer(overlayLayers[displayName]);
-            }
-        }
-    };
-
-    const label = document.createElement("label");
-    label.htmlFor = displayName;
-
-    const swatch = document.createElement("span");
-    swatch.style.display = "inline-block";
-    swatch.style.width = "12px";
-    swatch.style.height = "12px";
-    swatch.style.backgroundColor = color;
-    swatch.style.marginRight = "6px";
-    swatch.style.border = "1px solid #000";
-    swatch.style.flexShrink = "0";
-    swatch.style.borderRadius = "2px";
-
-    label.appendChild(checkbox);
-    label.appendChild(swatch);
-    label.appendChild(document.createTextNode(displayName));
-    menu.appendChild(label);
-
-    if (shouldLoadByDefault) checkbox.onchange();
-});
-
-
-
     </script>
 </body>
 </html>
